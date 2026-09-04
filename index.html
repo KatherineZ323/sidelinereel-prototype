@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SidelineReel — Roster Confirmation Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F6F7F5;
+    --ink: #14181C;
+    --ink-soft: #52585C;
+    --line: #E1E5DF;
+    --card: #FFFFFF;
+    --green: #2E6F4E;
+    --green-dark: #21503A;
+    --green-tint: #E7F0EA;
+    --gold: #D9A441;
+    --gold-tint: #FBF1DE;
+    --coral: #D2492B;
+    --coral-tint: #FBEAE4;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    padding:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+  }
+
+  .page{
+    min-height: 100vh;
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    padding: 40px 16px 64px;
+  }
+
+  .caption{
+    max-width: 420px;
+    text-align:center;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    margin: 0 0 28px;
+  }
+  .caption strong{ color: var(--ink); font-weight: 600; }
+
+  /* ---------- Phone frame ---------- */
+  .phone{
+    position: relative;
+    width: 390px;
+    max-width: 92vw;
+    height: 800px;
+    max-height: 86vh;
+    background: #0C0F12;
+    border-radius: 46px;
+    padding: 14px;
+    box-shadow: 0 30px 60px -25px rgba(20,24,28,0.35);
+  }
+  .phone-notch{
+    position:absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 22px;
+    background: #0C0F12;
+    border-radius: 0 0 16px 16px;
+    z-index: 5;
+  }
+  .phone-screen{
+    position:relative;
+    width:100%;
+    height:100%;
+    background: var(--bg);
+    border-radius: 34px;
+    overflow: hidden;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .status-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 16px 0 6px;
+    flex-shrink:0;
+  }
+  .dots{ display:flex; gap:7px; }
+  .dot{
+    width:7px; height:7px; border-radius:50%;
+    background: var(--line);
+    transition: background .2s ease, transform .2s ease;
+  }
+  .dot.active{ background: var(--green); transform: scale(1.25); }
+
+  .screen{
+    display:none;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    padding: 6px 22px 22px;
+    overflow-y: auto;
+  }
+  .screen.active{
+    display:flex;
+    animation: screenIn .32s ease;
+  }
+  @keyframes screenIn{
+    from{ opacity: 0; transform: translateY(10px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---------- Screen 1 ---------- */
+  .team-header{
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: 4px 0 2px;
+    font-weight: 500;
+  }
+  h1.screen-title{
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .stat-row{
+    display:flex;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .stat{
+    flex:1;
+    border: 1px solid var(--line);
+    background: var(--card);
+    border-radius: 16px;
+    padding: 14px 14px 12px;
+  }
+  .stat .num{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height:1;
+  }
+  .stat .label{
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-top: 6px;
+    font-weight: 500;
+  }
+  .stat.warn{
+    border-color: rgba(210,73,43,0.35);
+    background: var(--coral-tint);
+  }
+  .stat.warn .num{ color: var(--coral); }
+
+  .section-label{
+    font-size: 14px;
+    font-weight: 600;
+    margin: 4px 0 10px;
+  }
+
+  .clip-card{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 10px;
+    margin-bottom: 10px;
+    text-align:left;
+    width:100%;
+    font-family: inherit;
+    cursor: default;
+  }
+  button.clip-card{
+    cursor: pointer;
+    transition: border-color .15s ease, transform .1s ease;
+  }
+  button.clip-card:hover{ border-color: var(--coral); }
+  button.clip-card:active{ transform: scale(0.99); }
+  button.clip-card:focus-visible{
+    outline: 2px solid var(--coral);
+    outline-offset: 2px;
+  }
+
+  .clip-card.flagged{
+    border-color: rgba(210,73,43,0.45);
+    background: var(--coral-tint);
+  }
+
+  .thumb{
+    flex-shrink:0;
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2E6F4E, #1B4634);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .thumb svg{ width:16px; height:16px; }
+
+  .clip-info{ min-width:0; flex:1; }
+  .clip-title{
+    font-size: 14.5px;
+    font-weight: 600;
+    margin: 0 0 3px;
+    color: var(--ink);
+  }
+  .clip-sub{
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin:0;
+  }
+  .clip-sub.warn-text{ color: var(--coral); font-weight: 500; }
+
+  .tag-pill{
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background: var(--green-tint);
+    border-radius: 999px;
+    padding: 5px 10px 5px 6px;
+  }
+  .jersey-badge{
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+  }
+  .tag-pill .pname{
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--green-dark);
+  }
+
+  .review-chip{
+    flex-shrink:0;
+    background: var(--coral);
+    color:#fff;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 999px;
+  }
+
+  .spacer{ flex:1; }
+
+  .primary-btn{
+    width:100%;
+    border:none;
+    border-radius: 14px;
+    padding: 15px 18px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor:pointer;
+    background: var(--green);
+    color: #fff;
+    transition: background .15s ease, transform .1s ease, opacity .15s ease;
+    margin-top: 14px;
+    flex-shrink: 0;
+  }
+  .primary-btn:hover:not(:disabled){ background: var(--green-dark); }
+  .primary-btn:active:not(:disabled){ transform: scale(0.99); }
+  .primary-btn:focus-visible{
+    outline: 2px solid var(--green-dark);
+    outline-offset: 2px;
+  }
+  .primary-btn:disabled{
+    background: #C9CFC8;
+    color: #7B837C;
+    cursor: not-allowed;
+  }
+  .btn-subtext{
+    text-align:center;
+    font-size: 12px;
+    color: var(--coral);
+    font-weight: 500;
+    margin: 8px 0 0;
+    flex-shrink:0;
+  }
+
+  /* ---------- Screen 2 ---------- */
+  .back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    background:none;
+    border:none;
+    padding: 6px 2px;
+    margin: 2px 0 12px -2px;
+    font-family:'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    cursor:pointer;
+    width: fit-content;
+  }
+  .back-link:hover{ color: var(--ink); }
+  .back-link:focus-visible{ outline: 2px solid var(--ink-soft); outline-offset: 3px; border-radius: 4px; }
+  .back-link svg{ width:14px; height:14px; }
+
+  .preview{
+    position:relative;
+    width:100%;
+    aspect-ratio: 16/10;
+    border-radius: 18px;
+    background: linear-gradient(160deg, #1B4634 0%, #0C0F12 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom: 12px;
+    flex-shrink:0;
+  }
+  .play-circle{
+    width: 52px; height:52px;
+    border-radius:50%;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.3);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .play-circle svg{ width:18px; height:18px; margin-left:2px; }
+
+  .guess-badge{
+    position:absolute;
+    left: 12px;
+    bottom: 12px;
+    background: var(--gold);
+    color: #3A2A05;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 11px;
+    border-radius: 999px;
+  }
+
+  .warn-note{
+    display:flex;
+    gap: 9px;
+    background: var(--coral-tint);
+    border: 1px solid rgba(210,73,43,0.3);
+    border-radius: 12px;
+    padding: 11px 12px;
+    margin-bottom: 20px;
+    flex-shrink:0;
+  }
+  .warn-note svg{ width:16px; height:16px; flex-shrink:0; margin-top:1px; color: var(--coral); }
+  .warn-note p{
+    margin:0;
+    font-size: 12.5px;
+    line-height:1.45;
+    color: #9B3B22;
+  }
+
+  h2.q-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    flex-shrink:0;
+  }
+  .q-sub{
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0 0 14px;
+    flex-shrink:0;
+  }
+
+  .roster-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .roster-tile{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 7px;
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 6px 10px;
+    cursor:pointer;
+    transition: border-color .15s ease, background .15s ease, transform .1s ease;
+    font-family: inherit;
+  }
+  .roster-tile:hover{ border-color: #B9C2B6; }
+  .roster-tile:active{ transform: scale(0.97); }
+  .roster-tile:focus-visible{
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+  }
+  .roster-tile .badge{
+    width: 44px; height:44px;
+    border-radius:50%;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--ink);
+    transition: all .15s ease;
+  }
+  .roster-tile .pname{
+    font-size: 12px;
+    font-weight: 600;
+    text-align:center;
+    line-height:1.25;
+  }
+  .roster-tile.selected{
+    border-color: var(--green);
+    background: var(--green-tint);
+  }
+  .roster-tile.selected .badge{
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+
+  /* ---------- Screen 3 ---------- */
+  .confirm-wrap{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    gap: 14px;
+  }
+  .check-circle{
+    width: 64px; height:64px;
+    border-radius:50%;
+    background: var(--green-tint);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .check-circle svg{ width:28px; height:28px; color: var(--green); }
+  .confirm-wrap h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 4px 0 0;
+  }
+  .confirm-wrap p{
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 280px;
+    margin: 0;
+  }
+  .confirm-wrap p strong{ color: var(--ink); font-weight: 600; }
+
+  .secondary-btn{
+    margin-top: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    border-radius: 14px;
+    padding: 13px 22px;
+    font-family:'Inter', sans-serif;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor:pointer;
+    transition: border-color .15s ease, transform .1s ease;
+  }
+  .secondary-btn:hover{ border-color: var(--green); }
+  .secondary-btn:active{ transform: scale(0.98); }
+  .secondary-btn:focus-visible{
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <p class="caption">
+    <strong>Prototype:</strong> when SidelineReel isn't confident a jersey number matches the roster, it holds the clip back and asks the coach to confirm the right player before the weekly recap sends — instead of guessing.
+  </p>
+
+  <div class="phone">
+    <div class="phone-notch"></div>
+    <div class="phone-screen">
+      <div class="status-row">
+        <div class="dots" id="dots">
+          <div class="dot" data-dot="1"></div>
+          <div class="dot" data-dot="2"></div>
+          <div class="dot" data-dot="3"></div>
+        </div>
+      </div>
+
+      <!-- SCREEN 1 -->
+      <div class="screen" id="screen1">
+        <p class="team-header">Ridgeline U10 · Week 7</p>
+        <h1 class="screen-title">This week's recap</h1>
+
+        <div class="stat-row">
+          <div class="stat">
+            <div class="num" id="statReady">2</div>
+            <div class="label">Ready to send</div>
+          </div>
+          <div class="stat warn" id="statWarn">
+            <div class="num" id="statNeeds">1</div>
+            <div class="label">Need a quick check</div>
+          </div>
+        </div>
+
+        <div id="needsSection">
+          <p class="section-label">Needs your input</p>
+          <button class="clip-card flagged" id="flaggedCard">
+            <div class="thumb">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" fill="#fff"/></svg>
+            </div>
+            <div class="clip-info">
+              <p class="clip-title">Great save, 2nd half</p>
+              <p class="clip-sub warn-text">We're not fully sure who this is.</p>
+            </div>
+            <div class="review-chip">Review</div>
+          </button>
+        </div>
+
+        <p class="section-label">Ready to send</p>
+        <div id="readySection">
+          <div class="clip-card">
+            <div class="thumb">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" fill="#fff"/></svg>
+            </div>
+            <div class="clip-info">
+              <p class="clip-title">Corner kick assist</p>
+              <p class="clip-sub">1st half · 18:32</p>
+            </div>
+            <div class="tag-pill">
+              <div class="jersey-badge">7</div>
+              <span class="pname">Sofia R.</span>
+            </div>
+          </div>
+          <div class="clip-card">
+            <div class="thumb">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" fill="#fff"/></svg>
+            </div>
+            <div class="clip-info">
+              <p class="clip-title">Diving save</p>
+              <p class="clip-sub">2nd half · 04:10</p>
+            </div>
+            <div class="tag-pill">
+              <div class="jersey-badge">1</div>
+              <span class="pname">Owen D.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="spacer"></div>
+        <button class="primary-btn" id="sendBtn" disabled>Send recap</button>
+        <p class="btn-subtext" id="sendSubtext">1 clip needs review</p>
+      </div>
+
+      <!-- SCREEN 2 -->
+      <div class="screen" id="screen2">
+        <button class="back-link" id="backLink">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+          Recap
+        </button>
+
+        <div class="preview">
+          <div class="play-circle">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" fill="#fff"/></svg>
+          </div>
+          <div class="guess-badge">System's best guess: #14</div>
+        </div>
+
+        <div class="warn-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          <p>The number on this jersey was hard to read from the sideline angle. Help us get it right before this goes out.</p>
+        </div>
+
+        <h2 class="q-title">Who made this play?</h2>
+        <p class="q-sub">Tap the correct player from the roster</p>
+
+        <div class="roster-grid" id="rosterGrid"></div>
+
+        <div class="spacer"></div>
+        <button class="primary-btn" id="confirmBtn" disabled>Confirm player</button>
+      </div>
+
+      <!-- SCREEN 3 -->
+      <div class="screen" id="screen3">
+        <div class="confirm-wrap">
+          <div class="check-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+          </div>
+          <h2 id="resultHeading">Confirmed</h2>
+          <p id="resultMessage">This clip is set.</p>
+          <button class="secondary-btn" id="doneBtn">Back to recap</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const players = [
+    { id: 'p4',  number: 4,  name: 'Maya Chen' },
+    { id: 'p14', number: 14, name: 'Ethan Brooks' },
+    { id: 'p7',  number: 7,  name: 'Sofia Ramirez' },
+    { id: 'p11', number: 11, name: 'Jackson Lee' },
+    { id: 'p1',  number: 1,  name: 'Owen Davis' },
+    { id: 'p9',  number: 9,  name: 'Ava Thompson' },
+    { id: 'p22', number: 22, name: 'Liam Foster' },
+    { id: 'p3',  number: 3,  name: 'Grace Kim' },
+  ];
+  const guessId = 'p14';
+  const guessNumber = 14;
+
+  const state = {
+    selectedId: null,
+    resolved: false,
+    resolvedPlayer: null
+  };
+
+  const els = {
+    dots: document.querySelectorAll('.dot'),
+    screens: {
+      1: document.getElementById('screen1'),
+      2: document.getElementById('screen2'),
+      3: document.getElementById('screen3'),
+    },
+    statReady: document.getElementById('statReady'),
+    statNeeds: document.getElementById('statNeeds'),
+    statWarn: document.getElementById('statWarn'),
+    needsSection: document.getElementById('needsSection'),
+    readySection: document.getElementById('readySection'),
+    flaggedCard: document.getElementById('flaggedCard'),
+    sendBtn: document.getElementById('sendBtn'),
+    sendSubtext: document.getElementById('sendSubtext'),
+    backLink: document.getElementById('backLink'),
+    rosterGrid: document.getElementById('rosterGrid'),
+    confirmBtn: document.getElementById('confirmBtn'),
+    doneBtn: document.getElementById('doneBtn'),
+    resultHeading: document.getElementById('resultHeading'),
+    resultMessage: document.getElementById('resultMessage'),
+  };
+
+  function goTo(n){
+    Object.values(els.screens).forEach(s => s.classList.remove('active'));
+    els.screens[n].classList.add('active');
+    els.dots.forEach(d => d.classList.toggle('active', Number(d.dataset.dot) === n));
+  }
+
+  function renderScreen1(){
+    if(state.resolved){
+      els.statReady.textContent = '3';
+      els.statNeeds.textContent = '0';
+      els.statWarn.style.opacity = '0.6';
+      els.needsSection.style.display = 'none';
+
+      const extra = document.createElement('div');
+      extra.className = 'clip-card';
+      extra.innerHTML = `
+        <div class="thumb"><svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" fill="#fff"/></svg></div>
+        <div class="clip-info">
+          <p class="clip-title">Great save, 2nd half</p>
+          <p class="clip-sub">Confirmed by coach</p>
+        </div>
+        <div class="tag-pill">
+          <div class="jersey-badge">${state.resolvedPlayer.number}</div>
+          <span class="pname">${state.resolvedPlayer.name.split(' ')[0]} ${state.resolvedPlayer.name.split(' ')[1][0]}.</span>
+        </div>
+      `;
+      if(!document.getElementById('resolvedClipCard')){
+        extra.id = 'resolvedClipCard';
+        els.readySection.prepend(extra);
+      }
+
+      els.sendBtn.disabled = false;
+      els.sendSubtext.style.display = 'none';
+    } else {
+      els.statReady.textContent = '2';
+      els.statNeeds.textContent = '1';
+      els.sendBtn.disabled = true;
+      els.sendSubtext.style.display = 'block';
+    }
+  }
+
+  function buildRoster(){
+    els.rosterGrid.innerHTML = '';
+    players.forEach(p => {
+      const tile = document.createElement('button');
+      tile.className = 'roster-tile';
+      tile.dataset.id = p.id;
+      tile.innerHTML = `
+        <div class="badge">${p.number}</div>
+        <div class="pname">${p.name}</div>
+      `;
+      tile.addEventListener('click', () => selectPlayer(p.id));
+      els.rosterGrid.appendChild(tile);
+    });
+  }
+
+  function selectPlayer(id){
+    state.selectedId = id;
+    document.querySelectorAll('.roster-tile').forEach(t => {
+      t.classList.toggle('selected', t.dataset.id === id);
+    });
+    els.confirmBtn.disabled = false;
+  }
+
+  els.flaggedCard.addEventListener('click', () => {
+    goTo(2);
+  });
+
+  els.backLink.addEventListener('click', () => {
+    goTo(1);
+  });
+
+  els.confirmBtn.addEventListener('click', () => {
+    if(!state.selectedId) return;
+    const chosen = players.find(p => p.id === state.selectedId);
+    state.resolved = true;
+    state.resolvedPlayer = chosen;
+
+    if(chosen.id === guessId){
+      els.resultHeading.textContent = 'Confirmed';
+      els.resultMessage.innerHTML = `Confirmed — this clip belongs to <strong>${chosen.name} (#${chosen.number})</strong>, matching the system's guess.`;
+    } else {
+      els.resultHeading.textContent = 'Fixed';
+      els.resultMessage.innerHTML = `Good catch — the system guessed <strong>#${guessNumber}</strong>, but this clip actually belongs to <strong>${chosen.name} (#${chosen.number})</strong>.`;
+    }
+
+    goTo(3);
+  });
+
+  els.doneBtn.addEventListener('click', () => {
+    renderScreen1();
+    goTo(1);
+  });
+
+  buildRoster();
+  renderScreen1();
+  goTo(1);
+</script>
+
+</body>
+</html>
